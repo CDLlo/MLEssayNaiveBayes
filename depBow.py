@@ -8,8 +8,8 @@ import numpy as np
 import pandas as pd
 import math
 
-Data = pd.read_csv('devVectorsBayes.csv')
-Testset = pd.read_csv('vectorsBayes.csv')
+Data = pd.read_csv('vectorsBayes.csv')
+Testset = pd.read_csv('devVectorsBayes.csv')
 totalInstances = Data.shape[0]
 Tags = Data.tag.unique()
 vecList = []
@@ -28,6 +28,7 @@ BayesCounts = pd.concat(vecList, axis=1, keys=[s[0] for s in vecList])
 right = 0
 wrong = 0
 counter = 0
+sumVec = []
 for index, row in Testset.iterrows():
     #print('tag: ' + row['tag'])
     classVec = []
@@ -35,26 +36,29 @@ for index, row in Testset.iterrows():
         BayesCounts[tag]
         sumVec = []
         for elem in Data.columns:
-            if elem != 'tag':
+            if elem != 'tag' and row[elem] != 0:
                 try:
                     sumVec.append(math.log(float(BayesCounts[tag][elem])/float(BayesCounts[tag]['total'])))
                 except:
                     sumVec.append(0)
-        pred = float(sum(sumVec)*BayesCounts[tag]['freq'])
+        pred = float(sum(map(float,sumVec))*BayesCounts[tag]['freq'])
         prediction = pd.Series([pred])
         prediction = prediction.rename({0:tag})
         #print(prediction)
         classVec.append(prediction)
-        #print(classVec)
     #print(classVec)
     sys.stdout.write('\r'+str(counter))
     sys.stdout.flush()
     counter += 1
     predVec = pd.concat(classVec, axis=1,keys=[s.name for s in classVec])
-    if predVec.transpose().sum(numeric_only=1).idxmax(axis=1) == tag:
+    #print(classVec)
+    #print('pred: ' + predVec.transpose().sum(numeric_only=1).idxmax(axis=1))
+    #print('tag: ' + tag)
+    if predVec.transpose().sum(numeric_only=1).idxmax(axis=1) == row['tag']:
         right += 1
     else:
         wrong += 1
+print('\n')
 print(right)
 print(wrong)
 
