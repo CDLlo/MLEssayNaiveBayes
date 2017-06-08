@@ -13,6 +13,28 @@ Testset = pd.read_csv('devVectorsBayes.csv')
 totalInstances = Data.shape[0]
 Tags = Data.tag.unique()
 vecList = []
+idfVec = []
+for dep in Data:
+    if dep != 'tag':
+        size = Data.loc[Data[dep] != 0].shape[0]
+        try:
+            idf = math.log(totalInstances/float(size))
+            temp = pd.Series([idf])
+        except:
+            temp = pd.Series([0])
+        temp = temp.rename({0:dep})
+        idfVec.append(temp)
+idfVec = pd.concat(idfVec, axis=1,keys=[s.name for s in idfVec])
+idfVec = idfVec.transpose().sum(numeric_only=1)
+count = 0
+rowSums = Data.sum(axis =1)
+for row in Data.iterrows():
+    for elem in Data:
+        try:
+            Data.set_value(count,elem,float(idfVec[elem]*rowSums[count]))
+        except:
+            continue
+    count += 1
 for elem in Tags:
     IndivTag = Data.loc[Data['tag'] == elem]
     IndivCounts = IndivTag.sum(numeric_only=1)
